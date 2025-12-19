@@ -1,5 +1,8 @@
 # Gruppo-4_Progetto
+<<<<<<< HEAD
 
+=======
+>>>>>>> 58c527b40ad40a49b7393e0bf6b0ff3be4f3468e
 Classificazione di Tumori tramite Machine Learning
 Step 1 – Preprocessing del Dataset
 Descrizione del progetto:
@@ -12,8 +15,12 @@ Il dataset fornito contiene informazioni cliniche relative a cellule tumorali ed
 - 9 feature numeriche, ciascuna con valori compresi tra 1 e 10
 - Label di classe:  - 2 → tumore benigno
                     - 4 → tumore maligno
+<<<<<<< HEAD
 
                     
+=======
+            
+>>>>>>> 58c527b40ad40a49b7393e0bf6b0ff3be4f3468e
 Obiettivo del preprocessing:
 Lo scopo del preprocessing è trasformare il dataset grezzo in un insieme di dati:
 - numerico
@@ -38,7 +45,10 @@ Vengono mantenute esclusivamente le osservazioni con classe:
 4 (maligno)
 
 6. Controllo dei range:
+<<<<<<< HEAD
 
+=======
+>>>>>>> 58c527b40ad40a49b7393e0bf6b0ff3be4f3468e
 Le osservazioni che contengono valori delle feature fuori dall’intervallo [1, 10] vengono eliminate.
 
 Il preprocessing produce un dataset finale con le seguenti proprietà:
@@ -56,4 +66,8 @@ Attualmente il progetto include:
 X: matrice delle feature (9 variabili)
 y: vettore delle etichette di classe
 
+<<<<<<< HEAD
 Le fasi successive (model development e model evaluation) verranno implementate nei prossimi step.
+=======
+Le fasi successive (model development e model evaluation) verranno implementate nei prossimi step.
+>>>>>>> 58c527b40ad40a49b7393e0bf6b0ff3be4f3468e
