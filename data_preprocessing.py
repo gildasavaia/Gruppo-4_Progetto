@@ -95,4 +95,7 @@ def get_features_and_labels(df):
     #Restituisce X (features) e y (class label)
     X = df.drop(columns=["Sample code number", "classtype_v1"])
     y = df["classtype_v1"]
+
+    X = X.values.tolist()
+    y = y.values.tolist()
     return X, y
