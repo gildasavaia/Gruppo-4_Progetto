@@ -51,7 +51,7 @@ data["classtype_v1"] = pd.to_numeric(
 
 # 6. sostituisce i NaN nelle feature con la mediana delle colonne
 for col in feature_cols:
-    data[col].fillna(data[col].median(), inplace=True)
+    data[col] = data[col].fillna(data[col].median())
 
 
 # 7. Pulizia classi per mantenere solo i valori 2 e 4
