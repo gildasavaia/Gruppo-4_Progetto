@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Model_Development1 import predict_batch, X, y
+from Model_Development import predict_batch, X, y
 
 # Numero di vicini utilizzati dal classificatore k-NN
 K_NEIGHBORS = 5
