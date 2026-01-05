@@ -1,8 +1,8 @@
 import pandas as pd
 
 # 1. Caricamento dataset
-data = pd.read_csv("version_1.csv")
-# Legge il file CSV "version_1.csv" e lo carica in un DataFrame pandas chiamato "data".
+data = pd.read_csv("Data/version_1.csv")
+# Legge il file CSV "version_1.csv" dalla cartella Data.
 
 # 2. Selezione colonne rilevanti
 #mantiene solo le colonne elencate, riduce il dataset 

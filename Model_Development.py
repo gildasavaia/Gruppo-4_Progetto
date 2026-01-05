@@ -4,7 +4,7 @@ from math import sqrt
 import pandas as pd
 
 # Carica il dataset preprocessato
-df = pd.read_csv("dataset_preprocessato.csv")
+df = pd.read_csv("Data/dataset_preprocessato.csv")
 X, y = dp.get_features_and_labels(df) #abbiamo estratto X e y dal dataframe
 
 #distaza euclidea

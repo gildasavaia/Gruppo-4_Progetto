@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Model_Development1 import predict_batch, X, y
+from Model_Development import predict_batch, X, y
 
 # Numero di vicini utilizzati dal classificatore k-NN
 K_NEIGHBORS = 5
@@ -344,7 +344,7 @@ df = pd.DataFrame([{
 }])
 
 # Salvataggio delle metriche in un file Excel
-df.to_excel("knn_results.xlsx", index=False)
+df.to_excel("Data/knn_results.xlsx", index=False)
 
 # Visualizzazione dei grafici solo nel caso di validazione holdout
 
@@ -363,7 +363,7 @@ plt.ylabel("True Positive Rate")
 plt.title("ROC Curve - kNN")
 plt.legend()
 plt.grid(True)
-plt.savefig("roc_curve_knn.png", dpi=300, bbox_inches="tight")
+plt.savefig("Data/roc_curve_knn.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 # Estrazione dei valori della matrice di confusione
@@ -383,5 +383,5 @@ sns.heatmap(
 plt.xlabel("Predicted")
 plt.ylabel("True")
 plt.title("Confusion Matrix - kNN")
-plt.savefig("confusion_matrix_knn.png", dpi=300, bbox_inches="tight")
+plt.savefig("Data/confusion_matrix_knn.png", dpi=300, bbox_inches="tight")
 plt.show()
