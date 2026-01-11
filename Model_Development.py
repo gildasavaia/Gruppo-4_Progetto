@@ -1,11 +1,7 @@
-import data_preprocessing as dp
-import random
-from math import sqrt
-import pandas as pd
 
-# Carica il dataset preprocessato
-df = pd.read_csv("Data/dataset_preprocessato.csv")
-X, y = dp.get_features_and_labels(df) #abbiamo estratto X e y dal dataframe
+from math import sqrt
+
+
 
 #distaza euclidea
 
@@ -43,26 +39,37 @@ def get_k_nearest(distances, k):
     distances.sort(key=lambda t: t[0])
     return distances[:k]
 
-#predizione della classe tramite voto di maggioranza
-def predict_one(X_train, y_train, x_test, k):
+
+def predict_one(X_train, y_train, x_test, k, rng):
     """
-    Classifica un singolo campione di test
+    Classifica un singolo campione di test.
+    In caso di pareggio tra più classi, la classe predetta
+    viene scelta casualmente tra quelle con voto massimo.
     """
+
+
     distances = compute_distances(X_train, y_train, x_test)
     neighbors = get_k_nearest(distances, k)
-    class_votes = {} #conteggio delle label 
 
+    class_votes = {}
     for _, label in neighbors:
         class_votes[label] = class_votes.get(label, 0) + 1
 
-    # Restituisce la classe con il maggior numero di voti
-    return max(class_votes, key=class_votes.get)
+    max_votes = max(class_votes.values())
 
-def predict_batch(X_train, y_train, X_test, k):
-    #applico knn a tutto il test set
+    # classi che hanno il numero massimo di voti
+    tied_classes = [
+        label for label, votes in class_votes.items()
+        if votes == max_votes
+    ]
+
+    # scelta casuale in caso di pareggio
+    return rng.choice(tied_classes)
+
+def predict_batch(X_train, y_train, X_test, k, rng):
     predictions = []
     for x_test in X_test:
-        pred = predict_one(X_train, y_train, x_test, k)
+        pred = predict_one(X_train, y_train, x_test, k, rng)
         predictions.append(pred)
     return predictions
 

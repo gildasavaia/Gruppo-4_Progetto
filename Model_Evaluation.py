@@ -2,56 +2,16 @@ import random
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-from Model_Development import predict_batch, X, y
-
-# Numero di vicini utilizzati dal classificatore k-NN
-K_NEIGHBORS = 5
-# Imposto il seed per rendere i risultati riproducibili
-random.seed(42)
-POSITIVE_LABEL = 4
+import numpy as np
+from Model_Development import predict_batch
 
 
-print("Seleziona il metodo di validazione:")
-print("H -> Holdout")
-print("B -> Random Subsampling")
-print("C -> Stratified Cross Validation")
 
-choice = input("Inserisci la tua scelta (H/B/C): ").strip().upper()
 
-if choice == "H":
-    VALIDATION = "holdout"
 
-    train_perc = float(
-        input("Inserisci la percentuale di dati per il training set (es. 80): ")
-    )
 
-    TEST_SIZE = 1 - train_perc / 100
 
-elif choice == "B":
-    VALIDATION = "B"
 
-    train_perc = float(
-        input("Inserisci la percentuale di dati per il training set (es. 80): ")
-    )
-    TEST_SIZE = 1 - train_perc / 100
-
-    N_EXPERIMENTS = int(
-        input("Inserisci il numero di esperimenti per il random subsampling: ")
-    )
-
-elif choice == "C":
-    VALIDATION = "C"
-
-    N_EXPERIMENTS = int(
-        input("Inserisci il numero di fold per la cross validation stratificata: ")
-    )
-
-else:
-    raise ValueError("Scelta non valida. Inserire H, B o C.")
-# Unisco le feature e le etichette in una lista di coppie (x, y)
-# per facilitare shuffle e split del dataset
-data_xy = list(zip(X, y))
 
 
 def confusion_matrix(y_true, y_pred, pos):
@@ -157,7 +117,7 @@ def roc_curve_binary(y_true, y_pred, pos_label):
     return roc_points
 
 
-def holdout(data):
+def holdout(data, test_size, k, rng,positive_label):
     """
     Implementa il metodo di validazione holdout.
 
@@ -173,9 +133,9 @@ def holdout(data):
     - etichette predette dal classificatore
     """
     data = data.copy()  # Crea una copia del dataset per non modificare l’originale
-    random.shuffle(data)  # Mescola casualmente i dati
+    rng.shuffle(data)  # Mescola casualmente i dati
 
-    split = int((1 - TEST_SIZE) * len(data))  # Calcola l’indice di split train/test
+    split = int((1 - test_size) * len(data))  # Calcola l’indice di split train/test
     train = data[:split]  # Dati di training
     test = data[split:]  # Dati di test
 
@@ -186,13 +146,14 @@ def holdout(data):
         list(X_train),  # Feature di training
         list(y_train),  # Etichette di training
         list(X_test),  # Feature di test
-        K_NEIGHBORS  # Numero di vicini
+        k,  # Numero di vicini
+        rng #aggiungo seed
     )
 
     TP, FP, TN, FN = confusion_matrix(  # Calcola la confusion matrix
         y_test,  # Etichette reali
         y_pred,  # Etichette predette
-        POSITIVE_LABEL  # Classe positiva
+        positive_label  # Classe positiva
     )
 
     metrics = compute_metrics(  # Calcola le metriche di valutazione
@@ -202,7 +163,7 @@ def holdout(data):
     return metrics, (TP, FP, TN, FN), y_test, y_pred  # Ritorna metriche, confusion matrix e risultati
 
 
-def random_subsampling(data):
+def random_subsampling(data, test_size, k, n_experiments, rng,positive_label):
     """
     Implementa il metodo di validazione random subsampling.
 
@@ -223,9 +184,15 @@ def random_subsampling(data):
     y_pred_global = []
 
     # Ciclo su tutti gli esperimenti (random subsampling)
-    for _ in range(N_EXPERIMENTS):
+    for _ in range(n_experiments):
         # Eseguo un holdout per questo esperimento
-        metrics, cm, y_test, y_pred = holdout(data)
+        metrics, cm, y_test, y_pred = holdout(
+            data,
+            test_size,
+            k,
+            rng,
+            positive_label
+        )
 
         # Estrazione dei valori della matrice di confusione dell'esperimento corrente
         TP, FP, TN, FN = cm
@@ -244,10 +211,18 @@ def random_subsampling(data):
         results.append(metrics)
 
     # Calcolo della media delle metriche su tutti gli esperimenti
-    metrics_mean = [sum(m[i] for m in results) / N_EXPERIMENTS for i in range(5)]
-    return metrics_mean, (TP_total, FP_total, TN_total, FN_total), y_test_global, y_pred_global
+    metrics_mean = [
+        sum(m[i] for m in results) / n_experiments
+        for i in range(5)
+    ]
+    return (
+        metrics_mean,
+        (TP_total, FP_total, TN_total, FN_total),
+        y_test_global,
+        y_pred_global
+    )
 
-def stratified_cv(data):
+def stratified_cv(data, n_folds, k, rng, positive_label):
     """
     Implementa la stratified cross validation.
 
@@ -263,12 +238,12 @@ def stratified_cv(data):
     for x, y in data:
         class_groups.setdefault(y, []).append((x, y))
 
-    folds = [[] for _ in range(N_EXPERIMENTS)]
+    folds = [[] for _ in range(n_folds)]
 
     for group in class_groups.values():
         random.shuffle(group)
         for i, sample in enumerate(group):
-            folds[i % N_EXPERIMENTS].append(sample)
+            folds[i % n_folds].append(sample)
 
     results = []
     # Inizializzo i contatori globali della matrice di confusione
@@ -279,7 +254,7 @@ def stratified_cv(data):
     y_pred_global = []
 
     # Ciclo su tutti i fold (N_EXPERIMENTS = numero di fold)
-    for i in range(N_EXPERIMENTS):
+    for i in range(n_folds):
         # Seleziono il fold i-esimo come test set
         test = folds[i]
 
@@ -291,10 +266,10 @@ def stratified_cv(data):
         X_test, y_test = zip(*test)
 
         # Predizione delle etichette del test set tramite k-NN
-        y_pred = predict_batch(list(X_train), list(y_train), list(X_test), K_NEIGHBORS)
+        y_pred = predict_batch(list(X_train), list(y_train), list(X_test), k,rng)
 
         # Calcolo della matrice di confusione per il fold corrente
-        TP, FP, TN, FN = confusion_matrix(y_test, y_pred, POSITIVE_LABEL)
+        TP, FP, TN, FN = confusion_matrix(y_test, y_pred, positive_label)
 
         # Aggiornamento dei contatori globali sommando i valori di questo fold
         TP_total += TP
@@ -310,78 +285,107 @@ def stratified_cv(data):
         results.append(compute_metrics(TP, FP, TN, FN))
 
     # Calcolo la media delle metriche su tutti i fold
-    metrics_mean = [sum(m[i] for m in results) / N_EXPERIMENTS for i in range(5)]
-    return metrics_mean, (TP_total, FP_total, TN_total, FN_total), y_test_global, y_pred_global
+    metrics_mean = [
+        sum(m[i] for m in results) / n_folds
+        for i in range(5)
+    ]
+
+    return (
+        metrics_mean,
+        (TP_total, FP_total, TN_total, FN_total),
+        y_test_global,
+        y_pred_global
+    )
 
 
-# Selezione del metodo di validazione scelto
-if VALIDATION == "holdout":
-    metrics, cm, y_test, y_pred = holdout(data_xy)
-elif VALIDATION == "B":
-    metrics, cm, y_test, y_pred = random_subsampling(data_xy)
-elif VALIDATION == "C":
-    metrics, cm, y_test, y_pred = stratified_cv(data_xy)
-else:
-    raise ValueError("Metodo di validazione non valido")
-# Estrazione delle metriche di valutazione
-accuracy, error, sens, spec, gmean = metrics
+
+
 
 # Stampa delle prestazioni del classificatore
-print("\n--- PERFORMANCE ---")
-print("Accuracy:", accuracy)
-print("Error Rate:", error)
-print("Sensitivity:", sens)
-print("Specificity:", spec)
-print("G-Mean:", gmean)
+def print_metrics(metrics):
+    accuracy, error, sens, spec, gmean = metrics
+
+    print("\n--- PERFORMANCE ---")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Error Rate: {error:.4f}")
+    print(f"Sensitivity: {sens:.4f}")
+    print(f"Specificity: {spec:.4f}")
+    print(f"G-Mean: {gmean:.4f}")
+
 
 # Creazione del DataFrame contenente le metriche
-df = pd.DataFrame([{
-    "Accuracy": accuracy,
-    "Error Rate": error,
-    "Sensitivity": sens,
-    "Specificity": spec,
-    "G-Mean": gmean
-}])
+def save_metrics_to_excel(metrics, output_path):
+    """
+    Salva le metriche di valutazione in un file Excel.
 
-# Salvataggio delle metriche in un file Excel
-df.to_excel("Data/knn_results.xlsx", index=False)
+    Parametri:
+    - metrics: tupla (accuracy, error, sensitivity, specificity, gmean)
+    - output_path: percorso del file Excel
+    """
+    accuracy, error, sens, spec, gmean = metrics
 
-# Visualizzazione dei grafici solo nel caso di validazione holdout
+    df = pd.DataFrame([{
+        "Accuracy": accuracy,
+        "Error Rate": error,
+        "Sensitivity": sens,
+        "Specificity": spec,
+        "G-Mean": gmean
+    }])
+
+    df.to_excel(output_path, index=False)
+
+
 
 # Calcolo dei punti della ROC globale usando tutte le predizioni accumulate
-roc_points = roc_curve_binary(y_test, y_pred, POSITIVE_LABEL)  # calcolo FPR e TPR
-fpr = [p[0] for p in roc_points]  # estraggo i valori di False Positive Rate
-tpr = [p[1] for p in roc_points]  # estraggo i valori di True Positive Rate
+def plot_roc_curve(y_true, y_pred, positive_label, output_path):
+    """
+    Calcola e salva la curva ROC per un classificatore binario.
 
+    Parametri:
+    - y_true: etichette reali
+    - y_pred: etichette predette
+    - positive_label: classe positiva
+    - output_path: path immagine ROC
+    """
+    roc_points = roc_curve_binary(
+        y_true,
+        y_pred,
+        positive_label
+    )
 
-# Plot della curva ROC
-plt.figure()
-plt.plot(fpr, tpr, marker="o", label="k-NN")
-plt.plot([0, 1], [0, 1], linestyle="--", label="Random")
-plt.xlabel("False Positive Rate")
-plt.ylabel("True Positive Rate")
-plt.title("ROC Curve - kNN")
-plt.legend()
-plt.grid(True)
-plt.savefig("Data/roc_curve_knn.png", dpi=300, bbox_inches="tight")
-plt.show()
+    fpr = [p[0] for p in roc_points]
+    tpr = [p[1] for p in roc_points]
+
+    plt.figure()
+    plt.plot(fpr, tpr, marker="o", label="k-NN")
+    plt.plot([0, 1], [0, 1], linestyle="--", label="Random")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve - kNN")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 # Estrazione dei valori della matrice di confusione
-TP, FP, TN, FN = cm
-matrix = [[TP, FP], [FN, TN]]
+def plot_confusion_matrix(cm,output_path, title="Confusion Matrix - kNN"):
+    TP, FP, TN, FN = cm
+    matrix = np.array([
+        [TP, FP],
+        [FN, TN]
+    ])
 
-# Visualizzazione della matrice di confusione
-plt.figure()
-sns.heatmap(
-    matrix,
-    annot=True,
-    fmt="d",
-    cmap="Blues",
-    xticklabels=["Predicted Positive", "Predicted Negative"],
-    yticklabels=["Actual Positive", "Actual Negative"]
-)
-plt.xlabel("Predicted")
-plt.ylabel("True")
-plt.title("Confusion Matrix - kNN")
-plt.savefig("Data/confusion_matrix_knn.png", dpi=300, bbox_inches="tight")
-plt.show()
+    plt.figure()
+    sns.heatmap(
+        matrix,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=["Predicted Positive", "Predicted Negative"],
+        yticklabels=["Actual Positive", "Actual Negative"]
+    )
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title(title)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
