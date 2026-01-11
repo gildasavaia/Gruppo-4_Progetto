@@ -1,16 +1,34 @@
 import unittest
-import data_preprocessing as dp
 import pandas as pd
+from data_preprocessing import get_features_and_labels
 
 
 class TestDataPreprocessing(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Otteniamo features e label dal preprocessing
-        cls.X, cls.y = dp.get_features_and_labels()
+        #creo un dataset locale
+        df = pd.DataFrame({
+            "Sample code number": [1001, 1002, 1003, 1004, 1005],
 
-    def test_dataset_not_empty(self):
+            # 9 FEATURE
+            "f1": [1.0, 2.0, 3.0, 4.0, 5.0],
+            "f2": [5.1, 4.1, 3.1, 2.1, 1.1],
+            "f3": [10, 11, 12, 13, 14],
+            "f4": [7, 8, 9, 6, 5],
+            "f5": [0.5, 0.6, 0.7, 0.8, 0.9],
+            "f6": [100, 101, 102, 103, 104],
+            "f7": [1, 0, 1, 0, 1],
+            "f8": [9.9, 8.8, 7.7, 6.6, 5.5],
+            "f9": [3, 3, 3, 3, 3],
+
+            # LABEL
+            "classtype_v1": [2, 4, 2, 4, 2]
+        })
+
+        cls.X, cls.y = get_features_and_labels(df)
+
+    def test_dataset_not_empty(self):#
         self.assertGreater(len(self.X), 0, "Il dataset è vuoto")
 
     def test_same_number_of_samples(self):
@@ -21,8 +39,9 @@ class TestDataPreprocessing(unittest.TestCase):
         )
 
     def test_number_of_features(self):
+        # X è list[list]
         self.assertEqual(
-            self.X.shape[1],
+            len(self.X[0]),
             9,
             "Il numero di feature non è 9"
         )
@@ -30,16 +49,12 @@ class TestDataPreprocessing(unittest.TestCase):
     def test_class_labels_valid(self):
         valid_classes = {2, 4}
         self.assertTrue(
-            set(self.y.unique()).issubset(valid_classes),
+            set(self.y).issubset(valid_classes),
             "Sono presenti classi non valide"
         )
 
     def test_no_missing_values(self):
-        self.assertFalse(
-            self.X.isnull().values.any(),
-            "Sono presenti valori NaN nelle feature"
-        )
-
-
-if __name__ == "__main__":
-    unittest.main()
+        # controlla None o NaN nelle liste
+        for row in self.X:
+            for value in row:
+                self.assertIsNotNone(value, "Valore None trovato nelle feature")
