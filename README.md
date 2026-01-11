@@ -120,3 +120,18 @@ Oltre all’accuracy, sono state incluse metriche più adatte al contesto medico
 La curva ROC è approssimata, poiché il k-NN non fornisce probabilità
 La matrice di confusione permette una valutazione immediata degli errori
 Tutte le visualizzazioni vengono salvate come immagini per facilitare l’analisi.
+
+Il progetto é stato completato con i file necessari per creare un'immagine
+docker dell'intera applicazione. 
+
+Riga di codice utilizzata: docker build -t <nome-immagine>.
+
+L'immagine é stata configurata in modo che un'istanza dicontainer generata da essa:
+- legga da una cartella della macchina ospite il dataset di partenza e scriva i risultati nella stessa cartella;
+
+Per l'accesso al disco della macchina ospite da parte del container é stato utilizzato lo strumento del Bind Mounts -v 
+
+riga di codice utilizzata: docker run -it -v C:/Users/Gabriele/Desktop/Progetto_gruppo-finito:/app -w /app <nome-immagine> python Model_Evaluation.py
+
+
+
