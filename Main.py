@@ -6,11 +6,18 @@ from data_preprocessing import prepocessing, get_features_and_labels
 import os
 
 def main():
-    base_path = os.path.dirname(os.path.abspath(__file__)) 
-#costruisci il percorso al CSV in modo portabile
-    file_path = os.path.join(base_path, "Data", "version_1.csv")
-#leggi il CSV
-    data = pd.read_csv(file_path)
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+    data_dir = os.path.join(base_path, "Data")
+    results_dir = os.path.join(base_path, "Results")
+
+    os.makedirs(results_dir, exist_ok=True)
+
+    csv_path = os.path.join(data_dir, "version_1.csv")
+    cm_path = os.path.join(results_dir, "confusion_matrix_knn.png")
+    roc_path = os.path.join(results_dir, "roc_curve_knn.png")
+    excel_path = os.path.join(results_dir, "knn_results.xlsx")
+    data = pd.read_csv(csv_path)
 
     df=prepocessing(data)
     rng = random.Random(42)
@@ -41,14 +48,14 @@ def main():
             positive_label
         )
         print_metrics(metrics)
-        plot_confusion_matrix(cm,output_path="Results/confusion_matrix_knn.png")
-        save_metrics_to_excel( metrics,"Results/knn_results.xlsx")
+        plot_confusion_matrix(cm,cm_path)
+        save_metrics_to_excel( metrics,excel_path)
 
         plot_roc_curve(
             y_test,
             y_pred,
             positive_label,
-            "Results/roc_curve_knn.png"
+            roc_path
         )
     elif choice == "B":
 
@@ -66,14 +73,14 @@ def main():
             positive_label
         )
         print_metrics(metrics)
-        plot_confusion_matrix(cm,output_path="Results/confusion_matrix_knn.png")
-        save_metrics_to_excel(metrics,"Results/knn_results.xlsx" )
+        plot_confusion_matrix(cm,cm_path)
+        save_metrics_to_excel(metrics,excel_path )
 
         plot_roc_curve(
             y_test,
             y_pred,
             positive_label,
-            "Results/roc_curve_knn.png"
+            roc_path
         )
     elif choice == "C":
 
@@ -87,14 +94,14 @@ def main():
             positive_label
         )
         print_metrics(metrics)
-        plot_confusion_matrix(cm, output_path="Results/confusion_matrix_knn.png")
-        save_metrics_to_excel(metrics,"Results/knn_results.xlsx" )
+        plot_confusion_matrix(cm, cm_path)
+        save_metrics_to_excel(metrics,excel_path)
 
         plot_roc_curve(
             y_test,
             y_pred,
             positive_label,
-            "Results/roc_curve_knn.png"
+            roc_path
         )
 
     else:
