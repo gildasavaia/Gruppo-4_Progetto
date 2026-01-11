@@ -3,16 +3,15 @@ import pandas as pd
 from data_preprocessing import get_features_and_labels
 
 
-class TestDataPreprocessing(unittest.TestCase):
+class TestDataPreprocessing(unittest.TestCase): #test case per la funzione di preprocessing
 
     @classmethod
     def setUpClass(cls):
-        #creo un dataset locale
-        df = pd.DataFrame({
-            "Sample code number": [1001, 1002, 1003, 1004, 1005],
+        df = pd.DataFrame({ #creazione di un DataFrame di esempio
+            "Sample code number": [1001, 1002, 1003, 1004, 1005], 
 
-            # 9 FEATURE
-            "f1": [1.0, 2.0, 3.0, 4.0, 5.0],
+            # 9 FEATURE 
+            "f1": [1.0, 2.0, 3.0, 4.0, 5.0], 
             "f2": [5.1, 4.1, 3.1, 2.1, 1.1],
             "f3": [10, 11, 12, 13, 14],
             "f4": [7, 8, 9, 6, 5],
@@ -26,19 +25,19 @@ class TestDataPreprocessing(unittest.TestCase):
             "classtype_v1": [2, 4, 2, 4, 2]
         })
 
-        cls.X, cls.y = get_features_and_labels(df)
+        cls.X, cls.y = get_features_and_labels(df) #estrazione di feature e label
 
-    def test_dataset_not_empty(self):#
+    def test_dataset_not_empty(self): #controlla che il dataset non sia vuoto
         self.assertGreater(len(self.X), 0, "Il dataset è vuoto")
 
-    def test_same_number_of_samples(self):
-        self.assertEqual(
-            len(self.X),
+    def test_same_number_of_samples(self): #controlla che il numero di campioni in X e y sia lo stesso
+        self.assertEqual( #
+            len(self.X), 
             len(self.y),
             "Features e label hanno dimensioni diverse"
         )
 
-    def test_number_of_features(self):
+    def test_number_of_features(self): #controlla che il numero di feature sia 9 
         # X è list[list]
         self.assertEqual(
             len(self.X[0]),
@@ -46,7 +45,7 @@ class TestDataPreprocessing(unittest.TestCase):
             "Il numero di feature non è 9"
         )
 
-    def test_class_labels_valid(self):
+    def test_class_labels_valid(self): #controlla che le classi siano solo 2 o 4
         valid_classes = {2, 4}
         self.assertTrue(
             set(self.y).issubset(valid_classes),
