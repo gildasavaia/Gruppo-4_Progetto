@@ -3,23 +3,24 @@ import pandas as pd
 from Model_Evaluation import holdout, random_subsampling, print_metrics, plot_confusion_matrix, save_metrics_to_excel, \
     plot_roc_curve, stratified_cv
 from data_preprocessing import prepocessing, get_features_and_labels
-import os
+import os #importa il modulo os per operazioni sul sistema operativo
 
 def main():
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    base_path = os.path.dirname(os.path.abspath(__file__)) #ottieniamo il percorso della cartella corrente
 
-    data_dir = os.path.join(base_path, "Data")
-    results_dir = os.path.join(base_path, "Results")
+    data_dir = os.path.join(base_path, "Data") #percorso della cartella Data
+    results_dir = os.path.join(base_path, "Results") #percorso della cartella Results
 
-    os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True) #crea la cartella Results se non esiste già
 
+# Percorsi dei file di input e output
     csv_path = os.path.join(data_dir, "version_1.csv")
     cm_path = os.path.join(results_dir, "confusion_matrix_knn.png")
     roc_path = os.path.join(results_dir, "roc_curve_knn.png")
     excel_path = os.path.join(results_dir, "knn_results.xlsx")
     data = pd.read_csv(csv_path)
 
-    df=prepocessing(data)
+    df=prepocessing(data) 
     dataprocess_path=os.path.join(results_dir, "data_processed.csv")
     df.to_csv(dataprocess_path, index=False)
     rng = random.Random(42)
@@ -28,6 +29,7 @@ def main():
     X, y = get_features_and_labels(df)
     data_xy = list(zip(X, y))
 
+ # Menu di selezione del metodo di validazione
     print("Seleziona il metodo di validazione:")
     print("H -> Holdout")
     print("B -> Random Subsampling")
@@ -35,7 +37,7 @@ def main():
 
     choice = input("Inserisci la tua scelta (H/B/C): ").strip().upper()
 
-    if choice == "H":
+    if choice == "H": 
 
         train_perc = float(
             input("Inserisci la percentuale di dati per il training set (es. 80): ")
