@@ -3,10 +3,15 @@ import pandas as pd
 from Model_Evaluation import holdout, random_subsampling, print_metrics, plot_confusion_matrix, save_metrics_to_excel, \
     plot_roc_curve, stratified_cv
 from data_preprocessing import prepocessing, get_features_and_labels
-
+import os
 
 def main():
-    data = pd.read_csv("Data/version_1.csv")
+    base_path = os.path.dirname(os.path.abspath(__file__)) 
+#costruisci il percorso al CSV in modo portabile
+    file_path = os.path.join(base_path, "Data", "version_1.csv")
+#leggi il CSV
+    data = pd.read_csv(file_path)
+
     df=prepocessing(data)
     rng = random.Random(42)
     K_NEIGHBORS = 5
@@ -94,10 +99,6 @@ def main():
 
     else:
         raise ValueError("Scelta non valida. Inserire H, B o C.")
-
-
-
-
-
+    
 if __name__ == "__main__":
     main()
