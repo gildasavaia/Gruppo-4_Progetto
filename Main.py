@@ -20,6 +20,8 @@ def main():
     data = pd.read_csv(csv_path)
 
     df=prepocessing(data)
+    dataprocess_path=os.path.join(results_dir, "data_processed.csv")
+    df.to_csv(dataprocess_path, index=False)
     rng = random.Random(42)
     K_NEIGHBORS = 5
     positive_label = 4
