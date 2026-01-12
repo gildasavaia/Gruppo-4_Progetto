@@ -1,115 +1,162 @@
+import argparse
+import os
 import random
 import pandas as pd
-from Model_Evaluation import holdout, random_subsampling, print_metrics, plot_confusion_matrix, save_metrics_to_excel, \
-    plot_roc_curve, stratified_cv
+# Funzioni per valutazione del modello
+from Model_Evaluation import (
+    holdout,
+    random_subsampling,
+    stratified_cv,
+    print_metrics,
+    plot_confusion_matrix,
+    plot_roc_curve,
+    save_metrics_to_excel
+)
+
+# Funzioni di preprocessing
 from data_preprocessing import prepocessing, get_features_and_labels
-import os #importa il modulo os per operazioni sul sistema operativo
+
+
+def parse_arguments():
+    """Definisce e legge gli argomenti da linea di comando."""
+    parser = argparse.ArgumentParser(
+        description="Pipeline di classificazione KNN con diversi metodi di validazione"
+    )
+
+    #Parametri principali
+    parser.add_argument(
+        "--data-path",
+        type=str,
+        required=True,
+        help="Percorso al file CSV di input"
+    )
+    # Cartella di output dei risultati
+    parser.add_argument(
+        "--results-dir",
+        type=str,
+        default="Results",
+        help="Cartella dove salvare i risultati"
+    )
+    # Numero di vicini per KNN
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=5,
+        help="Numero di vicini (KNN)"
+    )
+
+    parser.add_argument(
+        "--positive-label",
+        type=int,
+        default=4,
+        help="Etichetta considerata positiva"
+    )
+
+    # Metodo di validazione
+    parser.add_argument(
+        "--validation",
+        type=str,
+        choices=["holdout", "subsampling", "cv"],
+        required=True,
+        help="Metodo di validazione: holdout | subsampling | cv"
+    )
+    # Percentuale di dati per il training set
+    parser.add_argument(
+        "--train-perc",
+        type=float,
+        default=80.0,
+        help="Percentuale di dati per il training (holdout/subsampling)"
+    )
+    # Numero di esperimenti per il random subsampling
+    parser.add_argument(
+        "--n-exp",
+        type=int,
+        default=10,
+        help="Numero di esperimenti per random subsampling"
+    )
+    # Numero di fold per la cross validation
+    parser.add_argument(
+        "--n-folds",
+        type=int,
+        default=5,
+        help="Numero di fold per Stratified Cross Validation"
+    )
+    # Seed per rendere i risultati riproducibili
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Seed per la riproducibilità"
+    )
+
+    return parser.parse_args()
+
 
 def main():
-    base_path = os.path.dirname(os.path.abspath(__file__)) #ottieniamo il percorso della cartella corrente
+    # Lettura degli argomenti da CLI
+    args = parse_arguments()
+    # Inizializzazione del generatore casuale
+    rng = random.Random(args.seed)
 
-    data_dir = os.path.join(base_path, "Data") #percorso della cartella Data
-    results_dir = os.path.join(base_path, "Results") #percorso della cartella Results
+    os.makedirs(args.results_dir, exist_ok=True)
 
-    os.makedirs(results_dir, exist_ok=True) #crea la cartella Results se non esiste già
+    #  Percorsi output
+    cm_path = os.path.join(args.results_dir, "confusion_matrix_knn.png")
+    roc_path = os.path.join(args.results_dir, "roc_curve_knn.png")
+    excel_path = os.path.join(args.results_dir, "knn_results.xlsx")
+    processed_path = os.path.join(args.results_dir, "data_processed.csv")
 
-# Percorsi dei file di input e output
-    csv_path = os.path.join(data_dir, "version_1.csv")
-    cm_path = os.path.join(results_dir, "confusion_matrix_knn.png")
-    roc_path = os.path.join(results_dir, "roc_curve_knn.png")
-    excel_path = os.path.join(results_dir, "knn_results.xlsx")
-    data = pd.read_csv(csv_path)
-
-    df=prepocessing(data) 
-    dataprocess_path=os.path.join(results_dir, "data_processed.csv")
-    df.to_csv(dataprocess_path, index=False)
-    rng = random.Random(42)
-    K_NEIGHBORS = 5
-    positive_label = 4
+    # Caricamento dati
+    data = pd.read_csv(args.data_path)
+    # Preprocessing dei dati
+    df = prepocessing(data)
+    df.to_csv(processed_path, index=False)
+    # Estrazione feature e label
     X, y = get_features_and_labels(df)
     data_xy = list(zip(X, y))
 
- # Menu di selezione del metodo di validazione
-    print("Seleziona il metodo di validazione:")
-    print("H -> Holdout")
-    print("B -> Random Subsampling")
-    print("C -> Stratified Cross Validation")
+    # Selezione del metodo di validazione
+    if args.validation == "holdout":
+        test_size = 1 - args.train_perc / 100
 
-    choice = input("Inserisci la tua scelta (H/B/C): ").strip().upper()
-
-    if choice == "H": 
-
-        train_perc = float(
-            input("Inserisci la percentuale di dati per il training set (es. 80): ")
-        )
-
-        test_size = 1 - train_perc / 100
         metrics, cm, y_test, y_pred = holdout(
             data_xy,
             test_size,
-            K_NEIGHBORS,
+            args.k,
             rng,
-            positive_label
+            args.positive_label
         )
-        print_metrics(metrics)
-        plot_confusion_matrix(cm,cm_path)
-        save_metrics_to_excel( metrics,excel_path)
 
-        plot_roc_curve(
-            y_test,
-            y_pred,
-            positive_label,
-            roc_path
-        )
-    elif choice == "B":
+    elif args.validation == "subsampling":
+        test_size = 1 - args.train_perc / 100
 
-        train_perc = float(
-            input("Inserisci la percentuale di dati per il training set (es. 80): ")
-        )
-        test_size = 1 - train_perc / 100
-        n_exp = int(input("Numero esperimenti random subsampling: "))
         metrics, cm, y_test, y_pred = random_subsampling(
             data_xy,
             test_size,
-            K_NEIGHBORS,
-            n_exp,
+            args.k,
+            args.n_exp,
             rng,
-            positive_label
+            args.positive_label
         )
-        print_metrics(metrics)
-        plot_confusion_matrix(cm,cm_path)
-        save_metrics_to_excel(metrics,excel_path )
 
-        plot_roc_curve(
-            y_test,
-            y_pred,
-            positive_label,
-            roc_path
-        )
-    elif choice == "C":
-
-        n_folds = int(input("Numero di fold per Stratified CV: "))
-
+    elif args.validation == "cv":
         metrics, cm, y_test, y_pred = stratified_cv(
             data_xy,
-            n_folds,
-            K_NEIGHBORS,
+            args.n_folds,
+            args.k,
             rng,
-            positive_label
-        )
-        print_metrics(metrics)
-        plot_confusion_matrix(cm, cm_path)
-        save_metrics_to_excel(metrics,excel_path)
-
-        plot_roc_curve(
-            y_test,
-            y_pred,
-            positive_label,
-            roc_path
+            args.positive_label
         )
 
     else:
-        raise ValueError("Scelta non valida. Inserire H, B o C.")
-    
+        raise ValueError("Metodo di validazione non valido")
+
+    # Output
+    print_metrics(metrics)
+    plot_confusion_matrix(cm, cm_path)
+    plot_roc_curve(y_test, y_pred, args.positive_label, roc_path)
+    save_metrics_to_excel(metrics, excel_path)
+
+# Avvio del programma
 if __name__ == "__main__":
     main()

@@ -121,6 +121,19 @@ La curva ROC è approssimata, poiché il k-NN non fornisce probabilità
 La matrice di confusione permette una valutazione immediata degli errori
 Tutte le visualizzazioni vengono salvate come immagini per facilitare l’analisi.
 
+
+Esempi di esecuzione da riga di comando per i diversi metodi di validazione:
+- Holdout: python main.py --data-path Data/version_1.csv --validation holdout --train-perc 80 --k 5
+
+    
+- Random Subsampling: python main.py --data-path Data/version_1.csv --validation subsampling --train-perc 70 --n-exp 20 --k 5
+
+   
+- Stratified Cross Validation: python main.py --data-path Data/version_1.csv --validation cv --n-folds 10 --k 3
+
+ 
+
+
 Il progetto é stato completato con i file necessari per creare un'immagine
 docker dell'intera applicazione. 
 
