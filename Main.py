@@ -96,18 +96,35 @@ def main():
     # Lettura degli argomenti da CLI
     args = parse_arguments()
     # Inizializzazione del generatore casuale
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # Data path
+    data_path = args.data_path
+    if not os.path.isabs(data_path):
+        data_path = os.path.join(BASE_DIR, data_path)
+
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"File CSV non trovato: {data_path}")
+
+    # Results directory
+    results_dir = args.results_dir
+    if not os.path.isabs(results_dir):
+        results_dir = os.path.join(BASE_DIR, results_dir)
+
+
     rng = random.Random(args.seed)
 
-    os.makedirs(args.results_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
 
     #  Percorsi output
-    cm_path = os.path.join(args.results_dir, "confusion_matrix_knn.png")
-    roc_path = os.path.join(args.results_dir, "roc_curve_knn.png")
-    excel_path = os.path.join(args.results_dir, "knn_results.xlsx")
-    processed_path = os.path.join(args.results_dir, "data_processed.csv")
+    cm_path = os.path.join(results_dir, "confusion_matrix_knn.png")
+    roc_path = os.path.join(results_dir, "roc_curve_knn.png")
+    excel_path = os.path.join(results_dir, "knn_results.xlsx")
+    processed_path = os.path.join(results_dir, "data_processed.csv")
 
     # Caricamento dati
-    data = pd.read_csv(args.data_path)
+    data = pd.read_csv(data_path)
     # Preprocessing dei dati
     df = prepocessing(data)
     df.to_csv(processed_path, index=False)
