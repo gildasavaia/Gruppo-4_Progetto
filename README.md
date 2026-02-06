@@ -144,7 +144,8 @@ L'immagine é stata configurata in modo che un'istanza dicontainer generata da e
 
 Per l'accesso al disco della macchina ospite da parte del container é stato utilizzato lo strumento del Bind Mounts -v 
 
-riga di codice utilizzata: docker run -it -v C:/Users/Gabriele/Desktop/Progetto_gruppo-finito:/app -w /app <nome-immagine> python Model_Evaluation.py
+riga di codice utilizzata: docker run -it -v "path cartella":/app -w /app <nome-immagine> + uno degli esempi di esecuzione
+
 
 
 
